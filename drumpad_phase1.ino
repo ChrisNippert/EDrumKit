@@ -1,17 +1,17 @@
 #include "USB.h"
 #include "USBMIDI.h"
 
-const int LED_PIN 48; // LED strip connected to pin 48 on my dev board
+const int LED_PIN = 48; // LED strip connected to pin 48 on my dev board
 
 // Multiplexer pins
 const int SIG_PIN = 4;
-const int S0_PIN = 5;
-const int S1_PIN = 6;
-const int S2_PIN = 7;
-const int S3_PIN = 8;
+const int S0 = 5;
+const int S1 = 6;
+const int S2 = 7;
+const int S3 = 8;
 
 // Drum Sensitivity
-const int THRESHOLD = 50;
+const int THRESHOLD = 1000;
 const int MAX_SENSE = 3200;
 
 const int NOTE_DURATION_MS = 30;
@@ -20,10 +20,10 @@ USBMIDI MIDI;
 
 // For selecting the multiplexer, 0-15
 void selectChannel(int ch) {
-  digitalWrite(S0_PIN, ch & 1);
-  digitalWrite(S1_PIN, ch & 2);
-  digitalWrite(S2_PIN, ch & 4);
-  digitalWrite(S3_PIN, ch & 8);
+  digitalWrite(S0, ch & 1);
+  digitalWrite(S1, ch & 2);
+  digitalWrite(S2, ch & 4);
+  digitalWrite(S3, ch & 8);
 }
 
 void hitColor(int velocity) {
@@ -47,6 +47,13 @@ void hitColor(int velocity) {
 }
 
 void setup() {
+
+  pinMode(S0, OUTPUT);
+  pinMode(S1, OUTPUT);
+  pinMode(S2, OUTPUT);
+  pinMode(S3, OUTPUT);
+  pinMode(SIG_PIN, INPUT); // Ensure SIG is configured as an input
+
   MIDI.begin();
   USB.begin();
   Serial.begin(115200);
@@ -73,10 +80,10 @@ unsigned long noteOffAt[16] = {0};
 bool noteActive[16] = {false};
 
 // Midi Out Map
-const int NOTES[16] = {38, 36, 42, 46, 41, 43, 45, 47,
+const int NOTES[16] = {36, 38, 42, 46, 41, 43, 45, 47,
                        48, 50, 49, 51, 37, 39, 54, 56};
 
-const int NUM_PADS = 1; // Used in the for loop for checking the signal from the multiplexer channels
+const int NUM_PADS = 16; // Used in the for loop for checking the signal from the multiplexer channels
 
 void loop() {
   for (int ch = 0; ch < NUM_PADS; ch++) {
@@ -89,7 +96,7 @@ void loop() {
 
   for (int ch = 0; ch < NUM_PADS; ch++) {
     selectChannel(ch);
-    delayMicroseconds(5); // Let multiplexer settle
+    delayMicroseconds(10); // Let multiplexer settle
     int v = analogRead(SIG_PIN);
 
     if (!tracking[ch]) {
